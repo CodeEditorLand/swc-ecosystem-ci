@@ -1,19 +1,4 @@
 {
-	"name": "swc-ecosystem-ci",
-	"scripts": {
-		"bisect": "tsx ecosystem-ci.ts bisect",
-		"enable": "tsx ecosystem-ci.ts enable",
-		"prepare": "husky install"
-	},
-	"lint-staged": {
-		"*": [
-			"prettier --write --ignore-unknown"
-		],
-		"**/*.{js,jsx,ts,tsx}": [
-			"eslint --fix",
-			"prettier --write"
-		]
-	},
 	"dependencies": {
 		"@actions/core": "1.10.1",
 		"@antfu/ni": "0.23.0",
@@ -28,5 +13,20 @@
 		"eslint-define-config": "2.1.0",
 		"lint-staged": "15.2.10",
 		"tsx": "4.19.1"
+	},
+	"lint-staged": {
+		"*": [
+			"prettier --write --ignore-unknown"
+		],
+		"**/*.{js,jsx,ts,tsx}": [
+			"eslint --fix",
+			"prettier --write"
+		]
+	},
+	"name": "swc-ecosystem-ci",
+	"scripts": {
+		"bisect": "tsx ecosystem-ci.ts bisect",
+		"enable": "tsx ecosystem-ci.ts enable",
+		"prepare": "husky install"
 	}
 }
