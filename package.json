@@ -24,7 +24,7 @@
 		"semver": "7.6.3"
 	},
 	"devDependencies": {
-		"@types/node": "22.6.0",
+		"@types/node": "22.7.2",
 		"eslint-define-config": "2.1.0",
 		"lint-staged": "15.2.10",
 		"tsx": "4.19.1"
