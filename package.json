@@ -1,6 +1,6 @@
 {
 	"dependencies": {
-		"@actions/core": "1.11.0",
+		"@actions/core": "1.11.1",
 		"@antfu/ni": "0.23.0",
 		"@octokit/core": "6.1.2",
 		"cac": "6.7.14",
