@@ -4,9 +4,10 @@ import { RunOptions } from "../types";
 export async function test(options: RunOptions) {
   await runInRepo({
     ...options,
-    repo: "nightwatchjs/nightwatch",
+    repo: "jantimon/css-variable",
     branch: "main",
     build: "build",
-    test: "test",
+    beforeBuild: "rustup target add wasm32-wasi",
+    test: ["test:swc"],
   });
 }

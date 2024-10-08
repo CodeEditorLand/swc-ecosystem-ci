@@ -4,9 +4,9 @@ import { RunOptions } from "../types";
 export async function test(options: RunOptions) {
   await runInRepo({
     ...options,
-    repo: "nightwatchjs/nightwatch",
+    repo: "g-plane/swc-plugin-vue-jsx",
     branch: "main",
-    build: "build",
-    test: "test",
+    build: ["rustup target add wasm32-unknown-unknown", "build"],
+    test: ["test"],
   });
 }

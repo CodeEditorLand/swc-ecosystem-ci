@@ -4,9 +4,9 @@ import { RunOptions } from "../types";
 export async function test(options: RunOptions) {
   await runInRepo({
     ...options,
-    repo: "nightwatchjs/nightwatch",
-    branch: "main",
+    repo: "SukkaW/rollup-plugin-swc",
+    branch: "master",
     build: "build",
-    test: "test",
+    test: ["test"],
   });
 }

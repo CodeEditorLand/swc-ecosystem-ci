@@ -4,9 +4,10 @@ import { RunOptions } from "../types";
 export async function test(options: RunOptions) {
   await runInRepo({
     ...options,
-    repo: "nightwatchjs/nightwatch",
-    branch: "main",
+    repo: "colinhacks/zod",
+    branch: "master",
     build: "build",
-    test: "test",
+    test: ["test:swc"],
+    agent: "yarn",
   });
 }

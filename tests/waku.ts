@@ -4,9 +4,10 @@ import { RunOptions } from "../types";
 export async function test(options: RunOptions) {
   await runInRepo({
     ...options,
-    repo: "nightwatchjs/nightwatch",
+    repo: "dai-shi/waku",
     branch: "main",
-    build: "build",
-    test: "test",
+    build: "compile",
+    test: "e2e",
+    beforeTest: "pnpm exec playwright install",
   });
 }

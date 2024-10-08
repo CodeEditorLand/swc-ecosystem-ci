@@ -4,9 +4,11 @@ import { RunOptions } from "../types";
 export async function test(options: RunOptions) {
   await runInRepo({
     ...options,
-    repo: "nightwatchjs/nightwatch",
+    repo: "tldraw/tldraw",
     branch: "main",
+    beforeInstall: ["corepack enable"],
     build: "build",
-    test: "test",
+    test: ["test"],
+    agent: "yarn",
   });
 }

@@ -4,7 +4,7 @@ import { RunOptions } from "../types";
 export async function test(options: RunOptions) {
   await runInRepo({
     ...options,
-    repo: "nightwatchjs/nightwatch",
+    repo: "sverweij/dependency-cruiser",
     branch: "main",
     build: "build",
     test: "test",

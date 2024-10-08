@@ -4,8 +4,8 @@ import { RunOptions } from "../types";
 export async function test(options: RunOptions) {
   await runInRepo({
     ...options,
-    repo: "nightwatchjs/nightwatch",
-    branch: "main",
+    repo: "nestjs/nest-cli",
+    branch: "master",
     build: "build",
     test: "test",
   });

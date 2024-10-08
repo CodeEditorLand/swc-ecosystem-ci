@@ -4,9 +4,9 @@ import { RunOptions } from "../types";
 export async function test(options: RunOptions) {
   await runInRepo({
     ...options,
-    repo: "nightwatchjs/nightwatch",
-    branch: "main",
-    build: "build",
+    repo: "backstage/backstage",
+    branch: "master",
+    build: ["tsc:full", "build:all"],
     test: "test",
   });
 }

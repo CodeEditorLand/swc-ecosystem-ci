@@ -4,7 +4,7 @@ import { RunOptions } from "../types";
 export async function test(options: RunOptions) {
   await runInRepo({
     ...options,
-    repo: "nightwatchjs/nightwatch",
+    repo: "gilbarbara/react-joyride",
     branch: "main",
     build: "build",
     test: "test",
