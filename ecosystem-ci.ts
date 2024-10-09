@@ -2,63 +2,66 @@ import fs from "fs";
 import path from "path";
 import { cac } from "cac";
 
-import {
-  enableIgnoredTest,
-  getSuitesToRun,
-  installSwc,
-  setupEnvironment,
-  testDir,
-} from "./utils";
 import { CommandOptions, RunOptions } from "./types";
+import {
+	enableIgnoredTest,
+	getSuitesToRun,
+	installSwc,
+	setupEnvironment,
+	testDir,
+} from "./utils";
 
 const cli = cac();
 
-cli
-  .command(
-    "run-suites [...suites]",
-    "run single suite with pre-built @swc/core",
-  )
-  .option(
-    "--verify",
-    "verify checkout by running tests before using local swc",
-    { default: false },
-  )
-  .option("--release <version>", "@swc/core release to use from npm registry", {
-    default: "nightly",
-  })
-  .action(async (suites, options: CommandOptions) => {
-    const { root, swcPath, workspace } = await setupEnvironment();
-    const suitesToRun = getSuitesToRun(suites, root);
-    await installSwc({ version: options.release });
-    const runOptions: RunOptions = {
-      ...options,
-      root,
-      swcPath,
-      workspace,
-    };
-    for (const suite of suitesToRun) {
-      await run(suite, runOptions);
-    }
-  });
+cli.command(
+	"run-suites [...suites]",
+	"run single suite with pre-built @swc/core",
+)
+	.option(
+		"--verify",
+		"verify checkout by running tests before using local swc",
+		{ default: false },
+	)
+	.option(
+		"--release <version>",
+		"@swc/core release to use from npm registry",
+		{
+			default: "nightly",
+		},
+	)
+	.action(async (suites, options: CommandOptions) => {
+		const { root, swcPath, workspace } = await setupEnvironment();
+		const suitesToRun = getSuitesToRun(suites, root);
+		await installSwc({ version: options.release });
+		const runOptions: RunOptions = {
+			...options,
+			root,
+			swcPath,
+			workspace,
+		};
+		for (const suite of suitesToRun) {
+			await run(suite, runOptions);
+		}
+	});
 
-cli
-  .command("enable [suite]", "enable single test suite")
-  .action(async (suite) => {
-    if (suite === "_") {
-      const { root } = await setupEnvironment();
+cli.command("enable [suite]", "enable single test suite").action(
+	async (suite) => {
+		if (suite === "_") {
+			const { root } = await setupEnvironment();
 
-      const availableSuites: string[] = fs
-        .readdirSync(path.join(root, "tests"))
-        .filter((f: string) => f.startsWith("_") && f.endsWith(".ts"))
-        .map((f: string) => f.slice(1, -3));
-      availableSuites.sort();
-      for (const suite of availableSuites) {
-        await enableIgnoredTest(suite);
-      }
-      return;
-    }
-    await enableIgnoredTest(suite);
-  });
+			const availableSuites: string[] = fs
+				.readdirSync(path.join(root, "tests"))
+				.filter((f: string) => f.startsWith("_") && f.endsWith(".ts"))
+				.map((f: string) => f.slice(1, -3));
+			availableSuites.sort();
+			for (const suite of availableSuites) {
+				await enableIgnoredTest(suite);
+			}
+			return;
+		}
+		await enableIgnoredTest(suite);
+	},
+);
 
 // cli
 //   .command(
@@ -114,9 +117,9 @@ cli.help();
 cli.parse();
 
 async function run(suite: string, options: RunOptions) {
-  const { test } = await import(`./${testDir}/${suite}.ts`);
-  await test({
-    ...options,
-    workspace: path.resolve(options.workspace, suite),
-  });
+	const { test } = await import(`./${testDir}/${suite}.ts`);
+	await test({
+		...options,
+		workspace: path.resolve(options.workspace, suite),
+	});
 }
