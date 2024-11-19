@@ -1,7 +1,7 @@
 {
 	"dependencies": {
 		"@actions/core": "1.11.1",
-		"@antfu/ni": "0.23.0",
+		"@antfu/ni": "0.23.1",
 		"@octokit/core": "6.1.2",
 		"cac": "6.7.14",
 		"execa": "9.5.1",
