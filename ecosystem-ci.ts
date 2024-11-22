@@ -31,14 +31,17 @@ cli.command(
 	)
 	.action(async (suites, options: CommandOptions) => {
 		const { root, swcPath, workspace } = await setupEnvironment();
+
 		const suitesToRun = getSuitesToRun(suites, root);
 		await installSwc({ version: options.release });
+
 		const runOptions: RunOptions = {
 			...options,
 			root,
 			swcPath,
 			workspace,
 		};
+
 		for (const suite of suitesToRun) {
 			await run(suite, runOptions);
 		}
@@ -54,6 +57,7 @@ cli.command("enable [suite]", "enable single test suite").action(
 				.filter((f: string) => f.startsWith("_") && f.endsWith(".ts"))
 				.map((f: string) => f.slice(1, -3));
 			availableSuites.sort();
+
 			for (const suite of availableSuites) {
 				await enableIgnoredTest(suite);
 			}

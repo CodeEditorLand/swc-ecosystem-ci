@@ -20,7 +20,9 @@ import {
 const isGitHubActions = !!process.env.GITHUB_ACTIONS;
 
 let swcPath: string;
+
 let cwd: string;
+
 let env: ProcessEnv;
 
 function cd(dir: string) {
@@ -48,6 +50,7 @@ export async function $(literals: TemplateStringsArray, ...values: any[]) {
 	proc.stdin && process.stdin.pipe(proc.stdin);
 	proc.stdout && proc.stdout.pipe(process.stdout);
 	proc.stderr && proc.stderr.pipe(process.stderr);
+
 	const result = await proc;
 
 	if (isGitHubActions) {
@@ -74,6 +77,7 @@ export async function setupEnvironment(): Promise<EnvironmentData> {
 		NO_COLOR: "1",
 	};
 	initWorkspace(workspace);
+
 	return { root, workspace, swcPath, cwd, env };
 }
 
@@ -82,10 +86,12 @@ function initWorkspace(workspace: string) {
 		fs.mkdirSync(workspace, { recursive: true });
 	}
 	const eslintrc = path.join(workspace, ".eslintrc.json");
+
 	if (!fs.existsSync(eslintrc)) {
 		fs.writeFileSync(eslintrc, '{"root":true}\n', "utf-8");
 	}
 	const editorconfig = path.join(workspace, ".editorconfig");
+
 	if (!fs.existsSync(editorconfig)) {
 		fs.writeFileSync(editorconfig, "root = true\n", "utf-8");
 	}
@@ -100,6 +106,7 @@ export async function setupRepo(options: RepoOptions) {
 	}
 
 	let { repo, commit, branch, tag, dir, shallow } = options;
+
 	if (!dir) {
 		throw new Error("setupRepo must be called with options.dir");
 	}
@@ -108,10 +115,13 @@ export async function setupRepo(options: RepoOptions) {
 	}
 
 	let needClone = true;
+
 	if (fs.existsSync(dir)) {
 		const _cwd = cwd;
 		cd(dir);
+
 		let currentClonedRepo: string | undefined;
+
 		try {
 			currentClonedRepo = await $`git ls-remote --get-url`;
 		} catch {
@@ -136,6 +146,7 @@ export async function setupRepo(options: RepoOptions) {
 	await $`git fetch ${shallow ? "--depth=1 --no-tags" : "--tags"} origin ${
 		tag ? `tag ${tag}` : `${commit || branch}`
 	}`;
+
 	if (shallow) {
 		await $`git -c advice.detachedHead=false checkout ${
 			tag ? `tags/${tag}` : `${commit || branch}`
@@ -143,6 +154,7 @@ export async function setupRepo(options: RepoOptions) {
 	} else {
 		await $`git checkout ${branch}`;
 		await $`git merge FETCH_HEAD`;
+
 		if (tag || commit) {
 			await $`git reset --hard ${tag || commit}`;
 		}
@@ -155,6 +167,7 @@ function toCommand(
 ): ((scripts: any) => Promise<any>) | void {
 	return async (scripts: any) => {
 		const tasks = Array.isArray(task) ? task : [task];
+
 		for (const task of tasks) {
 			if (task == null || task === "") {
 				continue;
@@ -227,6 +240,7 @@ export async function runInRepo(options: RunOptions & RepoOptions) {
 	}
 	if (options.agent == null) {
 		const detectedAgent = await detect({ cwd: dir, autoInstall: false });
+
 		if (detectedAgent == null) {
 			throw new Error(`Failed to detect packagemanager in ${dir}`);
 		}
@@ -240,13 +254,19 @@ export async function runInRepo(options: RunOptions & RepoOptions) {
 		);
 	}
 	const agent = options.agent;
+
 	const beforeInstallCommand = toCommand(beforeInstall, agent);
+
 	const beforeBuildCommand = toCommand(beforeBuild, agent);
+
 	const beforeTestCommand = toCommand(beforeTest, agent);
+
 	const buildCommand = toCommand(build, agent);
+
 	const testCommand = toCommand(test, agent);
 
 	const pkgFile = path.join(dir, "package.json");
+
 	const pkg = JSON.parse(await fs.promises.readFile(pkgFile, "utf-8"));
 
 	if (nodeVerison) {
@@ -280,6 +300,7 @@ export async function runInRepo(options: RunOptions & RepoOptions) {
 	await applyPackageOverrides(dir, pkg, agent, overrides);
 	await beforeBuildCommand?.(pkg.scripts);
 	await buildCommand?.(pkg.scripts);
+
 	if (test) {
 		await beforeTestCommand?.(pkg.scripts);
 		await testCommand?.(pkg.scripts);
@@ -289,11 +310,14 @@ export async function runInRepo(options: RunOptions & RepoOptions) {
 
 export async function getPermanentRef() {
 	cd(swcPath);
+
 	try {
 		const ref = await $`git log -1 --pretty=format:%h`;
+
 		return ref;
 	} catch (e) {
 		console.warn(`Failed to obtain perm ref. ${e}`);
+
 		return undefined;
 	}
 }
@@ -311,17 +335,23 @@ export async function bisectSwc(
 		await $`git bisect start`;
 		await $`git bisect bad`;
 		await $`git bisect good ${good}`;
+
 		let bisecting = true;
+
 		while (bisecting) {
 			const commitMsg = await $`git log -1 --format=%s`;
+
 			const isNonCodeCommit = commitMsg.match(/^(?:release|docs)[:(]/);
+
 			if (isNonCodeCommit) {
 				await $`git bisect skip`;
+
 				continue; // see if next commit can be skipped too
 			}
 			const error = await runSuite();
 			cd(swcPath);
 			await resetChanges();
+
 			const bisectOut = await $`git bisect ${error ? "bad" : "good"}`;
 			bisecting =
 				bisectOut.substring(0, 10).toLowerCase() === "bisecting:"; // as long as git prints 'bisecting: ' there are more revisions to test
@@ -367,17 +397,21 @@ async function overridePackageManagerVersion(
 	if (!pkg.packageManager && (pm === "pnpm" || pm === "yarn")) {
 		const pwd = cwd;
 		cd(`${root}/..`);
+
 		const ver = await $`${pm} --version`;
 		cd(pwd);
 		console.log(`Using`, ver);
 		pkg.packageManager = `${pm}@${ver}`;
+
 		return true;
 	}
 
 	const versionInUse = pkg.packageManager?.startsWith(`${pm}@`)
 		? pkg.packageManager.substring(pm.length + 1)
 		: await $`${pm} --version`;
+
 	let overrideWithVersion: string | null = null;
+
 	if (pm === "pnpm") {
 		if (semver.eq(versionInUse, "7.18.0")) {
 			// avoid bug with absolute overrides in pnpm 7.18.0
@@ -390,6 +424,7 @@ async function overridePackageManagerVersion(
 		);
 		// corepack reads this and uses pnpm @ newVersion then
 		pkg.packageManager = `${pm}@${overrideWithVersion}`;
+
 		if (!pkg.engines) {
 			pkg.engines = {};
 		}
@@ -444,6 +479,7 @@ export async function applyPackageOverrides(
 			...pkg.devDependencies,
 			...overrides, // overrides must be present in devDependencies or dependencies otherwise they may not work
 		};
+
 		if (!pkg.pnpm) {
 			pkg.pnpm = {};
 		}
@@ -516,11 +552,13 @@ export const testDir = isWorkingWithIgnoredTess ? "todos" : "tests";
 
 export function getSuitesToRun(suites: string[], root: string) {
 	let suitesToRun: string[] = suites.filter((s) => !s.startsWith("_"));
+
 	const availableSuites: string[] = fs
 		.readdirSync(path.join(root, testDir))
 		.filter((f: string) => f.endsWith(".ts"))
 		.map((f: string) => f.slice(0, -3));
 	availableSuites.sort();
+
 	if (
 		suitesToRun.length === 0 ||
 		(suitesToRun.length === 1 && suitesToRun[0] === "_")
@@ -530,6 +568,7 @@ export function getSuitesToRun(suites: string[], root: string) {
 		const invalidSuites = suitesToRun.filter(
 			(x) => !availableSuites.includes(x),
 		);
+
 		if (invalidSuites.length) {
 			console.log(`invalid suite(s): ${invalidSuites.join(", ")}`);
 			console.log(`available suites: ${availableSuites.join(", ")}`);
@@ -543,6 +582,7 @@ export async function enableIgnoredTest(testName: string) {
 	// Remove `_` prefix, and make a branch for the PR
 
 	const origPath = path.join(root, "todos", `${testName}.ts`);
+
 	const newPath = path.join(root, "tests", `${testName}.ts`);
 
 	if (!fs.existsSync(origPath)) {
