@@ -548,6 +548,7 @@ export async function installSwc({ version }: { version: string }) {
 }
 
 export const isWorkingWithIgnoredTess = process.env.CI_MODE === "ignored";
+
 export const testDir = isWorkingWithIgnoredTess ? "todos" : "tests";
 
 export function getSuitesToRun(suites: string[], root: string) {
