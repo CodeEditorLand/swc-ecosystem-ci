@@ -47,8 +47,11 @@ export async function $(literals: TemplateStringsArray, ...values: any[]) {
 		stdio: "pipe",
 		cwd,
 	});
+
 	proc.stdin && process.stdin.pipe(proc.stdin);
+
 	proc.stdout && proc.stdout.pipe(process.stdout);
+
 	proc.stderr && proc.stderr.pipe(process.stderr);
 
 	const result = await proc;
@@ -65,8 +68,11 @@ const root = dirnameFrom(import.meta.url);
 
 export async function setupEnvironment(): Promise<EnvironmentData> {
 	const workspace = path.resolve(root, "workspace");
+
 	swcPath = path.resolve(workspace, ".swc");
+
 	cwd = process.cwd();
+
 	env = {
 		...process.env,
 		CI: "true",
@@ -76,6 +82,7 @@ export async function setupEnvironment(): Promise<EnvironmentData> {
 		ECOSYSTEM_CI: "true", // flag for tests, can be used to conditionally skip irrelevant tests.
 		NO_COLOR: "1",
 	};
+
 	initWorkspace(workspace);
 
 	return { root, workspace, swcPath, cwd, env };
@@ -85,11 +92,13 @@ function initWorkspace(workspace: string) {
 	if (!fs.existsSync(workspace)) {
 		fs.mkdirSync(workspace, { recursive: true });
 	}
+
 	const eslintrc = path.join(workspace, ".eslintrc.json");
 
 	if (!fs.existsSync(eslintrc)) {
 		fs.writeFileSync(eslintrc, '{"root":true}\n', "utf-8");
 	}
+
 	const editorconfig = path.join(workspace, ".editorconfig");
 
 	if (!fs.existsSync(editorconfig)) {
@@ -101,6 +110,7 @@ export async function setupRepo(options: RepoOptions) {
 	if (options.branch == null) {
 		options.branch = "main";
 	}
+
 	if (options.shallow == null) {
 		options.shallow = true;
 	}
@@ -110,6 +120,7 @@ export async function setupRepo(options: RepoOptions) {
 	if (!dir) {
 		throw new Error("setupRepo must be called with options.dir");
 	}
+
 	if (!repo.includes(":")) {
 		repo = `https://github.com/${repo}.git`;
 	}
@@ -118,6 +129,7 @@ export async function setupRepo(options: RepoOptions) {
 
 	if (fs.existsSync(dir)) {
 		const _cwd = cwd;
+
 		cd(dir);
 
 		let currentClonedRepo: string | undefined;
@@ -127,6 +139,7 @@ export async function setupRepo(options: RepoOptions) {
 		} catch {
 			// when not a git repo
 		}
+
 		cd(_cwd);
 
 		if (repo === currentClonedRepo) {
@@ -141,8 +154,11 @@ export async function setupRepo(options: RepoOptions) {
 			shallow ? "--depth=1 --no-tags" : ""
 		} --branch ${tag || branch} ${repo} ${dir}`;
 	}
+
 	cd(dir);
+
 	await $`git clean -fdxq`;
+
 	await $`git fetch ${shallow ? "--depth=1 --no-tags" : "--tags"} origin ${
 		tag ? `tag ${tag}` : `${commit || branch}`
 	}`;
@@ -153,6 +169,7 @@ export async function setupRepo(options: RepoOptions) {
 		}`;
 	} else {
 		await $`git checkout ${branch}`;
+
 		await $`git merge FETCH_HEAD`;
 
 		if (tag || commit) {
@@ -174,6 +191,7 @@ function toCommand(
 			} else if (typeof task === "string") {
 				if (scripts[task] != null) {
 					const runTaskWithAgent = getCommand(agent, "run", [task]);
+
 					await $`${runTaskWithAgent}`;
 				} else {
 					await $`${task}`;
@@ -186,6 +204,7 @@ function toCommand(
 						task.script,
 						...(task.args ?? []),
 					]);
+
 					await $`${runTaskWithAgent}`;
 				} else {
 					throw new Error(
@@ -205,9 +224,11 @@ export async function runInRepo(options: RunOptions & RepoOptions) {
 	if (options.verify == null) {
 		options.verify = true;
 	}
+
 	if (options.skipGit == null) {
 		options.skipGit = false;
 	}
+
 	if (options.branch == null) {
 		options.branch = "main";
 	}
@@ -238,14 +259,17 @@ export async function runInRepo(options: RunOptions & RepoOptions) {
 	} else {
 		cd(dir);
 	}
+
 	if (options.agent == null) {
 		const detectedAgent = await detect({ cwd: dir, autoInstall: false });
 
 		if (detectedAgent == null) {
 			throw new Error(`Failed to detect packagemanager in ${dir}`);
 		}
+
 		options.agent = detectedAgent;
 	}
+
 	if (!AGENTS[options.agent]) {
 		throw new Error(
 			`Invalid agent ${options.agent}. Allowed values: ${Object.keys(
@@ -253,6 +277,7 @@ export async function runInRepo(options: RunOptions & RepoOptions) {
 			).join(", ")}`,
 		);
 	}
+
 	const agent = options.agent;
 
 	const beforeInstallCommand = toCommand(beforeInstall, agent);
@@ -271,7 +296,9 @@ export async function runInRepo(options: RunOptions & RepoOptions) {
 
 	if (nodeVerison) {
 		await $`fnm use --install-if-missing ${nodeVerison}`;
+
 		await $`node --version`;
+
 		await $`which node`;
 	}
 
@@ -279,32 +306,47 @@ export async function runInRepo(options: RunOptions & RepoOptions) {
 
 	if (verify && test) {
 		const frozenInstall = getCommand(agent, "frozen");
+
 		await $`${frozenInstall}`;
+
 		await beforeBuildCommand?.(pkg.scripts);
+
 		await buildCommand?.(pkg.scripts);
+
 		await beforeTestCommand?.(pkg.scripts);
+
 		await testCommand?.(pkg.scripts);
 	}
+
 	const overrides = options.overrides || {};
 	// https://github.com/facebook/react-native/issues/35701#issuecomment-1697798232
 	overrides["jest"] = path.join(swcPath, "node_modules", "jest");
+
 	overrides["ts-node"] = path.join(swcPath, "node_modules", "ts-node");
+
 	overrides["@swc/core"] = path.join(swcPath, "node_modules", "@swc", "core");
+
 	overrides["@swc/types"] = path.join(
 		swcPath,
 		"node_modules",
 		"@swc",
 		"types",
 	);
+
 	console.log("OVERRIDES", overrides);
+
 	await applyPackageOverrides(dir, pkg, agent, overrides);
+
 	await beforeBuildCommand?.(pkg.scripts);
+
 	await buildCommand?.(pkg.scripts);
 
 	if (test) {
 		await beforeTestCommand?.(pkg.scripts);
+
 		await testCommand?.(pkg.scripts);
 	}
+
 	return { dir };
 }
 
@@ -331,9 +373,13 @@ export async function bisectSwc(
 
 	try {
 		cd(swcPath);
+
 		await resetChanges();
+
 		await $`git bisect start`;
+
 		await $`git bisect bad`;
+
 		await $`git bisect good ${good}`;
 
 		let bisecting = true;
@@ -348,11 +394,15 @@ export async function bisectSwc(
 
 				continue; // see if next commit can be skipped too
 			}
+
 			const error = await runSuite();
+
 			cd(swcPath);
+
 			await resetChanges();
 
 			const bisectOut = await $`git bisect ${error ? "bad" : "good"}`;
+
 			bisecting =
 				bisectOut.substring(0, 10).toLowerCase() === "bisecting:"; // as long as git prints 'bisecting: ' there are more revisions to test
 		}
@@ -361,6 +411,7 @@ export async function bisectSwc(
 	} finally {
 		try {
 			cd(swcPath);
+
 			await $`git bisect reset`;
 		} catch (e) {
 			console.log("Error while resetting bisect", e);
@@ -373,12 +424,14 @@ function isLocalOverride(v: string): boolean {
 		// not path-like (either a version number or a package name)
 		return false;
 	}
+
 	try {
 		return !!fs.lstatSync(v)?.isDirectory();
 	} catch (e) {
 		if (e.code !== "ENOENT") {
 			throw e;
 		}
+
 		return false;
 	}
 }
@@ -396,11 +449,15 @@ async function overridePackageManagerVersion(
 ): Promise<boolean> {
 	if (!pkg.packageManager && (pm === "pnpm" || pm === "yarn")) {
 		const pwd = cwd;
+
 		cd(`${root}/..`);
 
 		const ver = await $`${pm} --version`;
+
 		cd(pwd);
+
 		console.log(`Using`, ver);
+
 		pkg.packageManager = `${pm}@${ver}`;
 
 		return true;
@@ -418,6 +475,7 @@ async function overridePackageManagerVersion(
 			overrideWithVersion = "7.18.1";
 		}
 	}
+
 	if (overrideWithVersion) {
 		console.warn(
 			`detected ${pm}@${versionInUse} used in ${pkg.name}, changing pkg.packageManager and pkg.engines.${pm} to enforce use of ${pm}@${overrideWithVersion}`,
@@ -428,6 +486,7 @@ async function overridePackageManagerVersion(
 		if (!pkg.engines) {
 			pkg.engines = {};
 		}
+
 		pkg.engines[pm] = overrideWithVersion;
 
 		if (pkg.devDependencies?.[pm]) {
@@ -438,6 +497,7 @@ async function overridePackageManagerVersion(
 
 		return true;
 	}
+
 	return false;
 }
 
@@ -456,11 +516,13 @@ export async function applyPackageOverrides(
 			.filter(([, value]) => typeof value === "string")
 			.map(([key, value]) => [key, useFileProtocol(value as string)]),
 	);
+
 	await $`git clean -fdxq`; // remove current install
 
 	if (!agent) {
 		agent = await detect({ cwd: dir, autoInstall: false });
 	}
+
 	if (!agent) {
 		throw new Error(`failed to detect packageManager in ${dir}`);
 	}
@@ -475,6 +537,7 @@ export async function applyPackageOverrides(
 		if (!pkg.devDependencies) {
 			pkg.devDependencies = {};
 		}
+
 		pkg.devDependencies = {
 			...pkg.devDependencies,
 			...overrides, // overrides must be present in devDependencies or dependencies otherwise they may not work
@@ -483,6 +546,7 @@ export async function applyPackageOverrides(
 		if (!pkg.pnpm) {
 			pkg.pnpm = {};
 		}
+
 		pkg.pnpm.overrides = {
 			...pkg.pnpm.overrides,
 			...overrides,
@@ -502,6 +566,7 @@ export async function applyPackageOverrides(
 			if (pkg.dependencies?.[name]) {
 				pkg.dependencies[name] = version;
 			}
+
 			if (pkg.devDependencies?.[name]) {
 				pkg.devDependencies[name] = version;
 			}
@@ -509,7 +574,9 @@ export async function applyPackageOverrides(
 	} else {
 		throw new Error(`unsupported package manager detected: ${pm}`);
 	}
+
 	const pkgFile = path.join(dir, "package.json");
+
 	await fs.promises.writeFile(pkgFile, JSON.stringify(pkg, null, 2), "utf-8");
 
 	await $`node --version`;
@@ -538,12 +605,15 @@ export function dirnameFrom(url: string) {
 
 export async function installSwc({ version }: { version: string }) {
 	await fs.promises.mkdir(swcPath, { recursive: true });
+
 	await fs.promises.writeFile(
 		path.join(swcPath, "package.json"),
 		"{}",
 		"utf8",
 	);
+
 	cd(swcPath);
+
 	await $`npm install @swc/core@${version} @swc/jest @swc/types ts-node@11.0.0-beta.1 jest@29.6.4 --no-save --force`;
 }
 
@@ -558,6 +628,7 @@ export function getSuitesToRun(suites: string[], root: string) {
 		.readdirSync(path.join(root, testDir))
 		.filter((f: string) => f.endsWith(".ts"))
 		.map((f: string) => f.slice(0, -3));
+
 	availableSuites.sort();
 
 	if (
@@ -572,10 +643,13 @@ export function getSuitesToRun(suites: string[], root: string) {
 
 		if (invalidSuites.length) {
 			console.log(`invalid suite(s): ${invalidSuites.join(", ")}`);
+
 			console.log(`available suites: ${availableSuites.join(", ")}`);
+
 			process.exit(1);
 		}
 	}
+
 	return suitesToRun;
 }
 
@@ -594,12 +668,15 @@ export async function enableIgnoredTest(testName: string) {
 		try {
 			await $`git branch -D enable/${testName}`;
 		} catch {}
+
 		await $`git switch -f -c enable/${testName} HEAD`;
 
 		await fs.promises.rename(origPath, newPath);
 
 		await $`git add -A`;
+
 		await $`git commit -m ${testName}`;
+
 		await $`git push origin enable/${testName} -f`;
 	} finally {
 		await $`git switch main`;
