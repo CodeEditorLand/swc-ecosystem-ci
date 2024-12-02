@@ -26,7 +26,6 @@
 	"name": "swc-ecosystem-ci",
 	"scripts": {
 		"bisect": "tsx ecosystem-ci.ts bisect",
-		"enable": "tsx ecosystem-ci.ts enable",
-		"prepare": "husky install"
+		"enable": "tsx ecosystem-ci.ts enable"
 	}
 }
