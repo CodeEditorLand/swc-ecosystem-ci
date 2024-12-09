@@ -23,7 +23,7 @@
 			"prettier --write"
 		]
 	},
-	"name": "swc-ecosystem-ci",
+	"name": "@codeeditorland/ecosystem-ci",
 	"scripts": {
 		"bisect": "tsx ecosystem-ci.ts bisect",
 		"enable": "tsx ecosystem-ci.ts enable"
